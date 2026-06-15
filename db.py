@@ -11,4 +11,3 @@ conn = psycopg2.connect(
         password=os.getenv("DB_PASSWORD"),
         port=os.getenv("DB_PORT")
     )
-cursor =    conn.cursor()

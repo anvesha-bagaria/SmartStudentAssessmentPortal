@@ -31,28 +31,52 @@ def submit_answer(
     }
 
 
-def update_answer(answer_id, selected_option_id):
-    conn.rollback()
-    cur=conn.cursor()
+def update_answer(
+    answer_id,
+    selected_option_id=None,
+    answer_text=None
+):
+    cur = conn.cursor()
 
-    cur.execute(
-        """UPDATE submitted_answers
-        SET selected_option = %s
-        WHERE answer_id = %s
-        """,
-        (selected_option_id, answer_id)
-    )
+    if selected_option_id is not None:
+
+        cur.execute(
+            """
+            UPDATE submitted_answers
+            SET selected_option_id = %s
+            WHERE answer_id = %s
+            """,
+            (selected_option_id, answer_id)
+        )
+
+    elif answer_text is not None:
+
+        cur.execute(
+            """
+            UPDATE submitted_answers
+            SET answer_text = %s
+            WHERE answer_id = %s
+            """,
+            (answer_text, answer_id)
+        )
+
+    else:
+        return {
+            "message": "No answer provided"
+        }
 
     conn.commit()
 
-    return {"message": "Answer updated successfully"}
+    return {
+        "message": "Answer updated successfully"
+    }
 
 def get_answers_by_submission(submission_id):
     conn.rollback()
     cur=conn.cursor()
 
     cur.execute(
-        """SELECT answer_id, question_id, selected_option
+        """SELECT answer_id, question_id, selected_option_id
         FROM submitted_answers
         WHERE submission_id = %s
         """,

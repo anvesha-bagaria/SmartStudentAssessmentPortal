@@ -1,16 +1,9 @@
 from db import conn
-from pydantic import BaseModel
+
 from passlib.context import CryptContext
 from auth import create_access_token
 
 
-class StudentRegister(BaseModel):
-    student_id: int 
-    name: str
-    email:str
-    password:str
-    student_class:str
-    school:str
 
 
 def register_student(student):
@@ -47,7 +40,7 @@ def register_student(student):
     conn.commit()
 
     cur.close()
-    conn.close()
+    
 
     return {"message": "Student registered successfully"}
 
@@ -56,7 +49,7 @@ def login_student(email, password):
 
     cur.execute(
         """
-        SELECT student_id, name, email, password
+        SELECT student_id, name, email, password, student_class
         FROM students
         WHERE email = %s
         """,
@@ -75,10 +68,10 @@ def login_student(email, password):
         cur.close()
         return {"message": "Invalid password"}
 
-    access_token = create_access_token({"student_id": student[0], "email": student[2]})
+    access_token = create_access_token({"student_id": student[0], "email": student[2],"student_class": student[4]})
 
     cur.close()
-    # do not close global conn here; let caller manage connection lifecycle if needed
+    
 
     return {"access_token": access_token, "token_type": "bearer"}     
 
@@ -88,12 +81,31 @@ def get_user_profile(student_id):
 
     cur.execute(
         """
-        SELECT student_id, name, email, student_class, school
+        SELECT
+            student_id,
+            name,
+            email,
+            student_class,
+            school
         FROM students
         WHERE student_id = %s
         """,
         (student_id,)
     )
 
-    return cur.fetchone()
+    student = cur.fetchone()
 
+    cur.close()
+
+    if not student:
+        return {
+            "message": "Student not found"
+        }
+
+    return {
+        "student_id": student[0],
+        "name": student[1],
+        "email": student[2],
+        "student_class": student[3],
+        "school": student[4]
+    }
